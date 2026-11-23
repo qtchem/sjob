@@ -1,4 +1,0 @@
-#!/bin/bash
-# stub: "runs" the metajobs by executing every table.dat line, in order.
-echo "$1" > submitted_njobs
-while IFS= read -r line; do bash -c "$line" || true; done < table.dat

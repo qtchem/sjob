@@ -1,7 +1,0 @@
-#!/bin/bash
-# stub: -n NAME lists a job if NAME is in $STUB_STATE/farm_running; otherwise
-# prints the lines of $STUB_STATE/queue (the "queued jobs").
-S="${STUB_STATE:?}"; name=""
-args=("$@"); for ((i=0;i<${#args[@]};i++)); do [[ ${args[$i]} == -n ]] && name="${args[$((i+1))]}"; done
-if [[ -n $name ]]; then grep -qx "$name" "$S/farm_running" 2>/dev/null && echo 9999; exit 0; fi
-cat "$S/queue" 2>/dev/null; exit 0

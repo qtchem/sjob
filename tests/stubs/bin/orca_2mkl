@@ -1,4 +1,0 @@
-#!/bin/bash
-# stub: orca_2mkl orca -molden  (reads ./orca.gbw, writes ./orca.molden.input)
-[[ -f orca.gbw ]] || { echo "orca_2mkl: no orca.gbw" >&2; exit 1; }
-{ echo "[Molden Format]"; cat orca.gbw; } > orca.molden.input

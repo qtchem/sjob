@@ -1,9 +1,0 @@
-#!/bin/bash
-# stub: runs the job script synchronously in the cwd, records its final state.
-S="${STUB_STATE:?}"; mkdir -p "$S/jobs"
-[[ -f $S/sbatch_fail ]] && { echo "sbatch: error: stub failure" >&2; exit 1; }
-script="${!#}"
-id=$(( $(cat "$S/sbatch_count" 2>/dev/null || echo 1000) + 1 )); echo $id > "$S/sbatch_count"
-out=$(sed -n 's/^#SBATCH --output=//p' "$script" | head -1); out="${out:-slurm-$id.out}"
-if bash "$script" > "$out" 2>&1; then echo COMPLETED > "$S/jobs/$id"; else echo FAILED > "$S/jobs/$id"; fi
-echo "$id;cluster"
