@@ -1,0 +1,82 @@
+#!/bin/bash
+# sjob -- Globus transfer -> orca_2mkl -> spart -> Slurm -> collect, as one tool.
+#   sjob --help
+set -uo pipefail
+
+SJOB_HOME="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+SJ_BIN="$SJOB_HOME/bin/sjob"
+export SJOB_HOME SJ_BIN
+
+# shellcheck source=../lib/core.sh
+source "$SJOB_HOME/lib/core.sh"
+source "$SJOB_HOME/lib/config.sh"
+source "$SJOB_HOME/lib/batch.sh"
+
+COMMANDS="batches transfer process submit collect report run status"
+
+usage() {
+    cat >&2 <<EOF
+sjob $SJ_VERSION -- spart pipeline for DRAC clusters
+
+Usage: sjob [--config FILE] [-v] <command> [options]
+
+Commands:
+  batches   split a list of source dirs into batch_NNNN.txt files
+  transfer  Globus-transfer the *gbw* files of a batch
+  process   decompress + orca_2mkl each case (parallel)
+  submit    run spart and submit the jobs to Slurm (or META-Farm)
+  collect   classify finished cases, archive results, clean up (dry run by default)
+  report    summary of collected results (by state / reason / dataset)
+  run       all stages end-to-end over many batches
+  status    per-batch progress and queue length
+
+Per-batch commands take --batch FILE (repeatable) or --all.
+See 'sjob <command> --help'. Settings: etc/sjob.conf.example.
+EOF
+}
+
+SJ_VERBOSE=0
+SJ_CONFIG_FILE="${SJ_CONFIG_FILE:-}"
+while (($#)); do
+    case "$1" in
+        --config)  [[ $# -ge 2 ]] || die "--config needs a file"; SJ_CONFIG_FILE="$2"; shift 2 ;;
+        -v|--verbose) SJ_VERBOSE=1; shift ;;
+        -h|--help) usage; exit 0 ;;
+        --version) echo "sjob $SJ_VERSION"; exit 0 ;;
+        *) break ;;
+    esac
+done
+export SJ_VERBOSE SJ_CONFIG_FILE
+
+(($#)) || { usage; exit 2; }
+cmd="$1"; shift
+
+sj_load_config "$SJ_CONFIG_FILE"
+
+# Internal: `sjob _worker <cmdfile> <function> args...` runs one worker
+# function from lib/cmd/<cmdfile>.sh (used by xargs -P; replaces `export -f`).
+if [[ $cmd == _worker ]]; then
+    (($# >= 2)) || die "_worker needs <cmdfile> <function>"
+    # shellcheck disable=SC1090
+    source "$SJOB_HOME/lib/cmd/$1.sh"
+    fn="$2"; shift 2
+    "$fn" "$@"
+    exit $?
+fi
+
+case " $COMMANDS " in
+    *" $cmd "*) ;;
+    *) usage; die "unknown command: $cmd" ;;
+esac
+
+# Every command file may define helpers other commands reuse (run needs the stages).
+for f in "$SJOB_HOME"/lib/cmd/*.sh; do
+    # shellcheck disable=SC1090
+    source "$f"
+done
+# shellcheck disable=SC1090
+source "$SJOB_HOME/lib/backend/sbatch.sh"
+source "$SJOB_HOME/lib/backend/farm.sh"
+
+"cmd_$cmd" "$@"
+exit $?

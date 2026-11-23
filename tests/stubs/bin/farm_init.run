@@ -1,0 +1,14 @@
+#!/bin/bash
+# stub: scaffolds a wave dir like META-Farm's farm_init.run
+d="$1"; mkdir -p "$d"
+cat > "$d/job_script.sh" <<SH
+#!/bin/bash
+#SBATCH -J placeholder
+#SBATCH -A def-someone
+#SBATCH -t 0-01:00
+#SBATCH --mem-per-cpu=256M
+task.run
+SH
+cp "$d/job_script.sh" "$d/resubmit_script.sh"
+echo "echo example line" > "$d/table.dat"
+echo "farm_init.run: created $d"

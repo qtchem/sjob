@@ -2,7 +2,7 @@
 
 batches_usage() {
     cat >&2 <<'EOF'
-Usage: spartflow batches LIST --size N [--out-dir DIR] [--start N] [--force]
+Usage: sjob batches LIST --size N [--out-dir DIR] [--start N] [--force]
   LIST       file with one source directory per line (relative to the Globus
              source endpoint; '#' comments and blank lines ignored)
   --size N   cases per batch (required)

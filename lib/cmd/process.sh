@@ -2,7 +2,7 @@
 
 process_usage() {
     cat >&2 <<'EOF'
-Usage: spartflow process (--batch FILE ... | --all) [--force]
+Usage: sjob process (--batch FILE ... | --all) [--force]
   --force   process even if the batch is not marked as transferred
 Runs NPROC cases in parallel. Cases that already have a Molden file and no
 compressed/gbw file are skipped, so an interrupted run resumes cleanly.
@@ -51,7 +51,7 @@ process_batch() {
     name=$(batch_name "$bf")
     if stage_done "$name" processed; then info "[$name] already processed"; return 0; fi
     if ((!force)) && ! stage_done "$name" transferred; then
-        die "[$name] not transferred yet (run 'spartflow transfer' first, or use --force)"
+        die "[$name] not transferred yet (run 'sjob transfer' first, or use --force)"
     fi
     info "[$name] processing with $NPROC parallel workers..."
     batch_case_dirs "$bf" | parallel_workers process process_case \

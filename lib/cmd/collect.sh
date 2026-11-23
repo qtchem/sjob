@@ -11,16 +11,16 @@
 
 collect_usage() {
     cat >&2 <<'EOF'
-Usage: spartflow collect (--batch FILE ... | --all) [--apply]
+Usage: sjob collect (--batch FILE ... | --all) [--apply]
   --apply      really archive and delete (default: dry run, changes nothing)
   --verbose    (global -v) list every non-DONE case during a dry run
 Settings: SUCCESS_FILES DELETE_GLOBS FAIL_PATTERNS RESULTS_DIR STATUS_DIR
-          FAILURES_DIR MIN_AGE_MIN NPROC ... (see etc/spartflow.conf.example)
+          FAILURES_DIR MIN_AGE_MIN NPROC ... (see etc/sjob.conf.example)
 EOF
 }
 
 # --------------------------------------------------------------------------
-# Per-case helpers (run inside `spartflow _worker collect ...`)
+# Per-case helpers (run inside `sjob _worker collect ...`)
 # --------------------------------------------------------------------------
 
 # Print SUCCESS_FILES matches (relative to the case dir), one per line.
@@ -255,7 +255,7 @@ collect_process_batch() {
     fi
 
     if ((!COLLECT_APPLY)); then
-        if ((SF_VERBOSE)); then awk -F'\t' '$2!="DONE" {print "    " $1 "\t" $3 "\t" $8}' "$tmp/status.tsv" >&2; fi
+        if ((SJ_VERBOSE)); then awk -F'\t' '$2!="DONE" {print "    " $1 "\t" $3 "\t" $8}' "$tmp/status.tsv" >&2; fi
         info "  (dry run) would archive $n_done cases to $arch, record $n_fail failures, then delete: $DELETE_GLOBS"
         return 0
     fi
@@ -315,7 +315,7 @@ collect_check_config() {
 # collect_run_batches FILE...  -- uses COLLECT_APPLY; the caller holds the lock.
 collect_run_batches() {
     local rc=0 bf
-    COLLECT_TMP=$(mktemp -d "${TMPDIR:-/tmp}/spartflow.XXXXXX") || die "cannot create temp dir"
+    COLLECT_TMP=$(mktemp -d "${TMPDIR:-/tmp}/sjob.XXXXXX") || die "cannot create temp dir"
     for bf; do collect_process_batch "$bf" || rc=1; done
     rm -rf "$COLLECT_TMP"
     return "$rc"

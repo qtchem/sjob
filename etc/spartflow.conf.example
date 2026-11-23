@@ -1,0 +1,49 @@
+# spartflow.conf -- copy to ./spartflow.conf (per work dir), ~/.config/spartflow/conf
+# or /etc/spartflow.conf, or pass --config FILE. Plain bash, plain assignments.
+# Precedence: defaults < /etc < ~/.config < ./spartflow.conf < --config < environment.
+# So  NPROC=4 spartflow process --all  always beats this file.
+
+# ---- Globus + paths (required by transfer / process / submit / collect) -----
+SOURCE_ENDPOINT="00000000-0000-0000-0000-000000000000"
+DEST_ENDPOINT="00000000-0000-0000-0000-000000000000"
+DEST_ROOT="/home/ohzde/scratch/test/omid"      # destinations in batch_*.txt live under here
+#CASE_ROOT="$PWD/data"                   # only if the tree was moved/copied (default: DEST_ROOT)
+#BATCH_DIR="."                           # where batch_*.txt are found by --all
+#STATE_DIR="state"                       # stage markers, lock, Globus task ids
+
+# ---- Environment for process/submit (run once per spartflow invocation) -----
+# With BACKEND=farm this is ALSO spliced into every wave's job_script.sh and
+# must contain `module load meta-farm`.
+ENV_SETUP='
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init - bash)"
+pyenv activate spart_py313
+module load StdEnv/2023 gcc/12.3 openmpi/4.1.5 orca/6.0.1
+'
+
+# ---- Parallelism and queue throttle ------------------------------------------
+#NPROC=8                    # cases post-processed at once (default: Slurm cpus / nproc)
+#MAX_QUEUED=800             # wait while this many of my jobs are queued/running
+#POLL_SECONDS=600           # squeue polling interval (keep it gentle)
+
+# ---- spart / backend --------------------------------------------------------
+#SPART_ARGS="-s mbis avh-b -a 100:590"
+#BACKEND=sbatch             # sbatch | farm
+#FARM_ROOT=metafarm; FARM_ACCOUNT=def-someone; FARM_NJOBS=7; FARM_MEM=8G; FARM_TIME=10:00:00
+
+# ---- collect: what is success, what is removed, how failures are named ------
+# A case is DONE when Slurm says COMPLETED and every SUCCESS_FILES pattern
+# matches a non-empty file. Those files are packed into results/<batch>.tar.zst.
+#SUCCESS_FILES="data_denspart.json last_iteration_coeffs_*.npz"
+# Removed from DONE cases only, and only after the archive is verified.
+# Failed and still-running cases are never touched. No "/" in patterns.
+#DELETE_GLOBS="*.molden.input *part.sh slurm-*.out .jobid *.queued data_denspart.json last_iteration_coeffs_*.npz"
+#RMDIR_EMPTY=1
+# "extended-regex|reason", matched against the last 20 lines of slurm-*.out.
+#FAIL_PATTERNS=(
+#    'Integration error of dipole moment|dipole_integration'
+#    'molden or mkl file .* contains errors|molden_load_error'
+#)
+#RESULTS_DIR=results; STATUS_DIR=status; FAILURES_DIR=failures
+#ZSTD_LEVEL=10; MIN_AGE_MIN=30; SACCT_SINCE=now-30days; SACCT_CHUNK=500

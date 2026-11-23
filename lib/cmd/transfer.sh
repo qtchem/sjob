@@ -7,7 +7,7 @@
 
 transfer_usage() {
     cat >&2 <<'EOF'
-Usage: spartflow transfer (--batch FILE ... | --all) [--no-wait]
+Usage: sjob transfer (--batch FILE ... | --all) [--no-wait]
   --no-wait   only submit the Globus task(s); a later run waits for them
 Needs SOURCE_ENDPOINT, DEST_ENDPOINT, DEST_ROOT.
 EOF
@@ -30,7 +30,7 @@ transfer_start() {
     fi
 
     mkdir -p "$STATE_DIR/$name"
-    listing=$(mktemp "${TMPDIR:-/tmp}/spartflow-transfer.XXXXXX") || die "mktemp failed"
+    listing=$(mktemp "${TMPDIR:-/tmp}/sjob-transfer.XXXXXX") || die "mktemp failed"
     while IFS=$'\t' read -r src dest; do
         validate_src "$src"
         dest_rel "$dest" >/dev/null          # also checks it is inside DEST_ROOT
@@ -42,7 +42,7 @@ transfer_start() {
     local task_id
     task_id=$(globus transfer "$SOURCE_ENDPOINT:" "$DEST_ENDPOINT:" \
                   --include "*gbw*" --exclude "*" --batch "$listing" \
-                  --label "spartflow $name" --jmespath task_id --format unix)
+                  --label "sjob $name" --jmespath task_id --format unix)
     local rc=$?
     rm -f "$listing"
     ((rc == 0)) && [[ -n $task_id ]] || die "[$name] Globus returned no task id"

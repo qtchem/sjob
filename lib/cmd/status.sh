@@ -5,7 +5,7 @@ cmd_status() {
     local used bf name n d f t p s c
     while (($#)); do
         case "$1" in
-            -h|--help) echo "Usage: spartflow status [--batch FILE ...]   (default: all batches)" >&2; return 0 ;;
+            -h|--help) echo "Usage: sjob status [--batch FILE ...]   (default: all batches)" >&2; return 0 ;;
             *) SEL_ALL=0; sel_opt "$@"; used=$?
                ((used)) || die "unknown option: $1"
                shift "$used" ;;

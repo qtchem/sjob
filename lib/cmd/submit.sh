@@ -2,7 +2,7 @@
 
 submit_usage() {
     cat >&2 <<'EOF'
-Usage: spartflow submit (--batch FILE ... | --all) [--force] [--no-throttle]
+Usage: sjob submit (--batch FILE ... | --all) [--force] [--no-throttle]
   --force        submit even if the batch is not marked as processed
   --no-throttle  do not wait for the queue to drop below MAX_QUEUED
 Backend (BACKEND=sbatch|farm) decides how the jobs are submitted.
@@ -34,11 +34,11 @@ submit_batch() {
     name=$(batch_name "$bf")
     if stage_done "$name" submitted; then info "[$name] already submitted"; return 0; fi
     if ((!force)) && ! stage_done "$name" processed; then
-        die "[$name] not processed yet (run 'spartflow process' first, or use --force)"
+        die "[$name] not processed yet (run 'sjob process' first, or use --force)"
     fi
     ((throttle)) && wait_for_queue
 
-    list=$(mktemp "${TMPDIR:-/tmp}/spartflow-submit.XXXXXX") || die "mktemp failed"
+    list=$(mktemp "${TMPDIR:-/tmp}/sjob-submit.XXXXXX") || die "mktemp failed"
     if ! submit_prepare_cases "$bf" "$list"; then rm -f "$list"; die "[$name] could not prepare Molden files"; fi
     info "[$name] submitting $(wc -l <"$list") cases via backend '$BACKEND'..."
     if ! "backend_${BACKEND}_submit_batch" "$bf" "$list"; then

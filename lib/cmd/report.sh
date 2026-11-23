@@ -2,12 +2,12 @@
 
 cmd_report() {
     case "${1:-}" in -h|--help)
-        echo "Usage: spartflow report   (counts by state, failure reason, dataset)" >&2; return 0 ;;
+        echo "Usage: sjob report   (counts by state, failure reason, dataset)" >&2; return 0 ;;
     esac
     shopt -s nullglob
     local -a files=("$STATUS_DIR"/*.tsv)
     shopt -u nullglob
-    ((${#files[@]})) || die "no status files in $STATUS_DIR (run 'spartflow collect --apply' first)"
+    ((${#files[@]})) || die "no status files in $STATUS_DIR (run 'sjob collect --apply' first)"
     cat "${files[@]}" | awk -F'\t' '
         /^#/ || NF < 3 { next }
         {

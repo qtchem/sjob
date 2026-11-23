@@ -2,7 +2,7 @@
 
 run_usage() {
     cat >&2 <<'EOF'
-Usage: spartflow run [--batch FILE ... | --all] [--max-batches N] [--collect]
+Usage: sjob run [--batch FILE ... | --all] [--max-batches N] [--collect]
                      [--no-pipeline] [--dry-run]
   (default selection: --all)
   --max-batches N  stop after submitting N batches (smoke tests)
@@ -10,7 +10,7 @@ Usage: spartflow run [--batch FILE ... | --all] [--max-batches N] [--collect]
                    batches whose jobs have all finished
   --no-pipeline    do not start the next batch's transfer while processing
   --dry-run        show what is pending and exit
-Resumable: finished stages are skipped (see 'spartflow status').
+Resumable: finished stages are skipped (see 'sjob status').
 EOF
 }
 

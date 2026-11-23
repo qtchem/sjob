@@ -1,0 +1,28 @@
+#!/bin/bash
+# stub: `spart part FILES... [opts] [-j]`
+[[ $1 == part ]] || exit 2; shift
+files=(); jflag=0
+while (($#)); do
+  case "$1" in -j) jflag=1; shift ;; -*) shift ;; *) files+=("$1"); shift ;; esac
+done
+if ((jflag)); then
+  for f in "${files[@]}"; do
+    dir=$(dirname "$f"); b=$(basename "$f"); name="${b%.molden.input}"
+    cat > "$dir/${name}_part.sh" <<SH
+#!/bin/bash
+#SBATCH --job-name=${name}_part
+#SBATCH --output=slurm-${name}-part.out
+spart part *molden.input -s mbis avh-b -a 100:590 -o data_denspart.json
+SH
+  done
+  exit 0
+fi
+for f in "${files[@]}"; do
+  if [[ $f == *BAD* ]]; then
+    echo "Traceback (most recent call last):" >&2
+    echo "ValueError: Integration error of dipole moment is larger than 1.0e-3!" >&2
+    exit 1
+  fi
+  echo '{"charges": [0.1, -0.1]}' > data_denspart.json
+  echo npz > last_iteration_coeffs_AVH-B_slsqp.npz
+done

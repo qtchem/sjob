@@ -1,0 +1,10 @@
+#!/bin/bash
+# stub: -j id1,id2 ... prints main + .batch rows from $STUB_STATE/jobs/<id>
+S="${STUB_STATE:?}"; j=""
+while (($#)); do [[ $1 == -j ]] && j="$2"; shift; done
+for id in ${j//,/ }; do
+  [[ -f $S/jobs/$id ]] || continue
+  st=$(<"$S/jobs/$id"); ex="0:0"; [[ $st == FAILED ]] && ex="1:0"
+  echo "$id|$st|$ex|00:01:00|"
+  echo "$id.batch|$st|$ex|00:01:00|1024K"
+done
