@@ -85,12 +85,13 @@ select_batches() {
     if ((SEL_ALL)); then
         while IFS= read -r f; do [[ -n $f ]] && SEL_BATCHES+=("$f"); done < <(list_batches)
     fi
-    for f in "${SEL_FILES[@]}"; do SEL_BATCHES+=("$f"); done
+    for f in ${SEL_FILES[@]+"${SEL_FILES[@]}"}; do SEL_BATCHES+=("$f"); done
     ((${#SEL_BATCHES[@]})) || die "no batches selected: give --batch FILE or --all (BATCH_DIR=$BATCH_DIR)"
-    local -A seen=(); local -a uniq=()
+    local seen=$'\n'; local -a uniq=()
     for f in "${SEL_BATCHES[@]}"; do
         [[ -f $f ]] || die "batch file not found: $f"
-        [[ -n ${seen[$f]:-} ]] || { seen[$f]=1; uniq+=("$f"); }
+        case "$seen" in *$'\n'"$f"$'\n'*) continue ;; esac
+        seen+="$f"$'\n'; uniq+=("$f")
     done
     SEL_BATCHES=("${uniq[@]}")
 }

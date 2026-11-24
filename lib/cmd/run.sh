@@ -74,8 +74,8 @@ cmd_run() {
         info "========================================"
 
         if ((do_collect)); then
-            local -a cand=()
-            mapfile -t cand < <(run_collect_candidates)
+            local -a cand=(); local line
+            while IFS= read -r line; do [[ -n $line ]] && cand+=("$line"); done < <(run_collect_candidates)
             if ((${#cand[@]})); then
                 COLLECT_APPLY=1
                 collect_run_batches "${cand[@]}" || warn "collect reported problems (continuing)"

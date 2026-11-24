@@ -25,7 +25,7 @@ sj_set_defaults() {
     ENV_SETUP=""                # shell lines run once: pyenv activate, module load ...
     ZSTD="zstd"
     ORCA_2MKL=""                # default: $EBROOTORCA/orca_2mkl
-    NPROC="${SLURM_CPUS_PER_TASK:-$(nproc)}"
+    NPROC="${SLURM_CPUS_PER_TASK:-$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1)}"
     MAX_QUEUED=800
     POLL_SECONDS=600
     SPART_ARGS="-s mbis avh-b -a 100:590"
@@ -57,10 +57,10 @@ sj_set_defaults() {
 
 # sj_load_config [EXPLICIT_FILE]
 sj_load_config() {
-    local explicit="${1:-}" v f
-    local -A envsnap=()
+    local explicit="${1:-}" v f tmp
+    local snapped=""    # names of variables set in the environment (bash 3.2: no associative arrays)
     for v in "${SJ_VARS[@]}"; do
-        if [[ -n "${!v+x}" ]]; then envsnap[$v]="${!v}"; fi
+        if [[ -n "${!v+x}" ]]; then printf -v "__sj_env_$v" '%s' "${!v}"; snapped+=" $v"; fi
     done
 
     sj_set_defaults
@@ -78,7 +78,7 @@ sj_load_config() {
         source "$explicit"; SJ_CONFIG_LOADED+=("$explicit")
     fi
 
-    for v in "${!envsnap[@]}"; do printf -v "$v" '%s' "${envsnap[$v]}"; done
+    for v in $snapped; do tmp="__sj_env_$v"; printf -v "$v" '%s' "${!tmp}"; done
     [[ -n $CASE_ROOT ]] || CASE_ROOT="$DEST_ROOT"
     DEST_ROOT="${DEST_ROOT%/}"
     CASE_ROOT="${CASE_ROOT%/}"

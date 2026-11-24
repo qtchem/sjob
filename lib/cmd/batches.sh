@@ -45,16 +45,17 @@ cmd_batches() {
     [[ $start =~ ^[0-9]+$ ]] || die "--start must be a number"
 
     local -a srcs=()
-    local line seen=0 dups=0
-    local -A uniq=()
+    local line seen=0 dups=0 total
+    # Normalise (CR, one trailing slash) and drop duplicate lines with awk:
+    # bash 3.2 (macOS) has no associative arrays, and awk is fast for millions of lines.
+    total=$(sed -e 's/\r$//' -e 's#/$##' "$list" | grep -cvE '^[[:space:]]*(#|$)')
     while IFS= read -r line || [[ -n $line ]]; do
-        line="${line%$'\r'}"; line="${line%/}"
         [[ -z "${line//[[:space:]]/}" || $line == \#* ]] && continue
         validate_src "$line"
         seen=$((seen + 1))
-        if [[ -n ${uniq[$line]:-} ]]; then dups=$((dups + 1)); continue; fi
-        uniq[$line]=1; srcs+=("$line")
-    done <"$list"
+        srcs+=("$line")
+    done < <(sed -e 's/\r$//' -e 's#/$##' "$list" | awk '!s[$0]++')
+    dups=$((total - seen))
     ((${#srcs[@]})) || die "no source directories in $list"
     ((dups == 0)) || warn "skipped $dups duplicate entries"
 
