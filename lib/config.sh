@@ -84,3 +84,15 @@ sj_load_config() {
     CASE_ROOT="${CASE_ROOT%/}"
     export "${SJ_VARS[@]}"
 }
+
+# sj_config_note -- print which config files are in effect (to stderr).
+sj_config_note() {
+    local f
+    printf '\nConfig files in use (later ones win):\n' >&2
+    if ((${#SJ_CONFIG_LOADED[@]})); then
+        for f in "${SJ_CONFIG_LOADED[@]}"; do printf '  %s\n' "$f" >&2; done
+    else
+        printf '  none found (using built-in defaults)\n  searched: %s\n' "${SJ_CONFIG_SEARCHED[*]}" >&2
+    fi
+    return 0
+}

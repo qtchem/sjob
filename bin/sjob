@@ -33,6 +33,7 @@ Commands:
 Per-batch commands take --batch FILE (repeatable) or --all.
 See 'sjob <command> --help'. Settings: etc/sjob.conf.example.
 EOF
+    sj_config_note
 }
 
 SJ_VERBOSE=0
@@ -41,7 +42,7 @@ while (($#)); do
     case "$1" in
         --config)  [[ $# -ge 2 ]] || die "--config needs a file"; SJ_CONFIG_FILE="$2"; shift 2 ;;
         -v|--verbose) SJ_VERBOSE=1; shift ;;
-        -h|--help) usage; exit 0 ;;
+        -h|--help) sj_load_config "$SJ_CONFIG_FILE"; usage; exit 0 ;;
         --version) echo "sjob $SJ_VERSION"; exit 0 ;;
         *) break ;;
     esac
@@ -52,6 +53,15 @@ export SJ_VERBOSE SJ_CONFIG_FILE
 cmd="$1"; shift
 
 sj_load_config "$SJ_CONFIG_FILE"
+
+# `sjob <command> -h`: say which config files are in use, then let the command
+# print its own help (appended after the help text).
+for a in "$@"; do
+    if [[ $a == -h || $a == --help ]]; then
+        trap sj_config_note EXIT
+        break
+    fi
+done
 
 # Internal: `sjob _worker <cmdfile> <function> args...` runs one worker
 # function from lib/cmd/<cmdfile>.sh (used by xargs -P; replaces `export -f`).
